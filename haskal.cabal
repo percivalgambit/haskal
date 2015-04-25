@@ -26,6 +26,7 @@ executable suck
   -- other-extensions:
   build-depends:
                        base >=4.7 && <4.9,
+                       containers >=0.5,
                        HTTP >=4000.2,
                        tagsoup >=0.13
 
