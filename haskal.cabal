@@ -30,7 +30,7 @@ executable suck
                        HTTP >=4000.2,
                        tagsoup >=0.13
 
-  hs-source-dirs:      suck
+  -- hs-source-dirs:
   default-language:    Haskell2010
 
 executable spew
@@ -40,7 +40,7 @@ executable spew
   build-depends:
                        base >=4.7 && <4.9
 
-  hs-source-dirs:      spew
+  -- hs-source-dirs:
   default-language:    Haskell2010
 
 test-suite test-suck
@@ -52,7 +52,7 @@ test-suite test-suck
                        test-framework >=0.8,
                        test-framework-quickcheck2 >=0.3
 
-  hs-source-dirs:      suck, tests
+  hs-source-dirs:      tests
   default-language:    Haskell2010
 
 test-suite test-spew
@@ -64,5 +64,5 @@ test-suite test-spew
                        test-framework >=0.8,
                        test-framework-quickcheck2 >=0.3
 
-  hs-source-dirs:      spew, tests
+  hs-source-dirs:      tests
   default-language:    Haskell2010
