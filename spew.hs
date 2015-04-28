@@ -21,8 +21,9 @@ main = do
         _  -> do
             let numWords = read $ head args :: Int
             model <- mkFastModel <$> readFile serializedFile
-            gen <- getStdGen
-            let ws = take numWords $ dropWhile (\s -> last s /= '.') (evalState (runModel model) gen)
+            gen <- newStdGen
+            let (start, gen') = randomR (bounds model) gen
+            let ws = take numWords $ drop 1 $ dropWhile (\s -> last s /= '.') (evalState (runModel model start) gen')
             putStr $ lineFill 72 ws
 
 usage :: IO ()
@@ -43,8 +44,8 @@ select tuples = getNext tuples <$> (state . randomR $ (0, range-1)) where
         | otherwise          = getNext rest (num - (fst tuple))
 
 
-runModel :: FastModel -> RandState [String]
-runModel model = iter start where
+runModel :: FastModel -> Int -> RandState [String]
+runModel model start = iter start where
     iter ix = do
         let (word, successors) = model ! ix
         case successors of
@@ -53,7 +54,6 @@ runModel model = iter start where
                 nextIx <- select successors
                 ws <- iter nextIx
                 return (word:ws)
-    start = 1
 
 lineFill :: Int -> [String] -> String
 lineFill _ [] = "\n"
