@@ -13,7 +13,6 @@ import Text.HTML.TagSoup
 import Text.StringLike
 
 type PrimitiveModel = Map (String,String) [String]
-type ProcessedModel = [(String,[(Int,Int)])]
 
 main :: IO ()
 main = do
