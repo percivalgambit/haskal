@@ -22,7 +22,7 @@ source-repository head
 
 executable suck
   main-is:             suck.hs
-  -- other-modules:
+  other-modules:       HaskalCommon
   -- other-extensions:
   build-depends:
                        base >=4.7 && <4.9,
@@ -35,7 +35,7 @@ executable suck
 
 executable spew
   main-is:             spew.hs
-  -- other-modules:
+  other-modules:       HaskalCommon
   -- other-extensions:
   build-depends:
                        base >=4.7 && <4.9
