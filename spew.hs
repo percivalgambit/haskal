@@ -2,7 +2,7 @@ module Main where
 
 import HaskalCommon
 
-import Control.Functor
+import Data.Functor
 import Control.Monad.State
 import Data.Array
 import System.Environment

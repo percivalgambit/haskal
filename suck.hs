@@ -3,7 +3,7 @@ module Main where
 import HaskalCommon
 import Paths_haskal
 
-import Control.Functor
+import Data.Functor
 import Control.Monad
 import Data.Char
 import Data.List
