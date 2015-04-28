@@ -21,9 +21,8 @@ main = do
         _  -> do
             let numWords = read $ head args :: Int
             model <- mkFastModel <$> readFile serializedFile
-            gen <- newStdGen
-            return $ dropWhile (\s -> last s /= '.') (evalState (runModel model) gen)
-            let ws = take numWords (evalState (runModel model) gen)
+            gen <- getStdGen
+            let ws = take numWords $ dropWhile (\s -> last s /= '.') (evalState (runModel model) gen)
             putStr $ lineFill 72 ws
 
 usage :: IO ()
