@@ -3,11 +3,11 @@ module Main where
 import HaskalCommon
 import Paths_haskal
 
-import Data.Functor
 import Control.Monad
 import Data.Char
+import Data.Functor
 import Data.List
-import Data.Map ((!), fromListWith, keys, lookupIndex, map, Map)
+import Data.Map hiding (foldr, filter, null)
 import Network.HTTP
 import System.IO
 import Text.HTML.TagSoup
@@ -17,52 +17,44 @@ type PrimitiveModel = Map (String,String) [String]
 
 main :: IO ()
 main = do
-    urls <- getDataFileName "urls.txt"
-    urlList <- lines <$> readFile urls
+    urlFile <- getDataFileName "urls.txt"
+    urlList <- lines <$> readFile urlFile
     pages <- sequence $ (fmap parseTags . openURL) <$> urlList
-    let corpus = (innerText . getPTags) <$> pages
+    let corpus = (normalizeWords . innerText . harvest) <$> pages
     let primitiveModel = mkPrimitiveModel corpus
-    let processedModel = mkProcessedModel $ Data.Map.map groupByWord primitiveModel
+    let processedModel = mkProcessedModel primitiveModel
     withFile serializedFile WriteMode (serializeModel processedModel)
 
 openURL :: String -> IO String
 openURL url = getResponseBody =<< simpleHTTP (getRequest url)
 
-getPTags [] = []
-getPTags (currTag:rest) = if (isTagOpenName "p" currTag)
-                          then inPTag rest
-                          else getPTags rest where
-    inPTag [] = []
-    inPTag (currTag:rest) = if (isTagCloseName "p" currTag)
-                            then getPTags rest
-                            else currTag : inPTag rest
+harvest :: StringLike str => [Tag str] -> [Tag str]
+harvest []   = []
+harvest tags = inPTag ++ harvest rest where
+    (inPTag, rest) = span (~/= TagClose "p") $ dropWhile (~/= TagOpen "p" []) tags
 
-mkPrimitiveModel :: [String] -> PrimitiveModel
-mkPrimitiveModel corpus = fromListWith (++) (concat $ (secondOrderWordRelations . filter (/= "")) <$> normalizedCorpus) where
-    secondOrderWordRelations (first:second:third:rest) =
-        foldr mkSecondOrderList [((first, second), [third])] rest
-    mkSecondOrderList word acc@(((_, prevSecond), [prevThird]):rest) =
-        ((prevSecond, prevThird), [word]) : acc
-    normalizedCorpus = [ normalizedPaper
-                       | paper <- corpus
-                       , let paperWords = words $ paper
-                       , let normalizedPaper = (fmap toLower . filter isAscii) <$> paperWords
-                       ]
+normalizeWords :: String -> [String]
+normalizeWords = filterHasLetter . filterBadChars . words where
+    filterBadChars = fmap (filter (\c -> isAscii c && isAlpha c || c=='.'))
+    filterHasLetter = filter (any isAlpha)
+
+mkPrimitiveModel :: [[String]] -> PrimitiveModel
+mkPrimitiveModel normalizedCorpus = fromListWith (++) relationLists where
+    relationLists = normalizedCorpus >>= foldr mkWordRelations [] . tails
+    mkWordRelations (firstWord:secondWord:thirdWord:_) = (:) ((firstWord, secondWord), [thirdWord])
+    mkWordRelations _ = id
 
 groupByWord :: [String] -> [(Int, String)]
-groupByWord words = sort $ zip (fmap length groupedWords) (fmap head groupedWords) where
+groupByWord words = reverse . sort $ zip (fmap length groupedWords) (fmap head groupedWords) where
     groupedWords = group words
 
-mkProcessedModel :: Map (String,String) [(Int, String)] -> ProcessedModel
-mkProcessedModel countMap = [ (secondW, nextIndices)
-                            | let words = keys countMap
-                            , entry@(w, secondW) <- words
-                            , let wCounts = countMap ! entry
-                            , let nextIndices = [ (count, index)
-                                                | (count, thirdW) <- wCounts
-                                                , (Just index) <- [(secondW, thirdW) `lookupIndex` countMap]
-                                                ]
-                            ]
+mkProcessedModel :: Map (String,String) [String] -> ProcessedModel
+mkProcessedModel primitiveModel = foldrWithKey foldModel [] primitiveModel where
+    foldModel (firstW, secondW) succesors = (:) (secondW, nextIndices) where
+        nextIndices = [ (count, index)
+                      | (count, thirdW) <- groupByWord succesors
+                      , (Just index) <- [(secondW, thirdW) `lookupIndex` primitiveModel]
+                      ]
 
 serializeModel :: ProcessedModel -> Handle -> IO ()
 serializeModel model fileHandle = do

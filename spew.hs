@@ -24,7 +24,7 @@ main = do
             gen <- newStdGen
             let (start, gen') = randomR (bounds model) gen
             let ws = take numWords $ drop 1 $ dropWhile (\s -> last s /= '.') (evalState (runModel model start) gen')
-            putStr $ lineFill 72 ws
+            putStr $ lineFill 80 ws
 
 usage :: IO ()
 usage = do
