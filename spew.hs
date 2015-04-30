@@ -23,19 +23,27 @@ main = do
             model <- mkFastModel <$> readFile serializedFile
             gen <- newStdGen
             let (start, gen') = randomR (bounds model) gen
-            let ws = take numWords $ drop 1 $ dropWhile (\s -> last s /= '.') (evalState (runModel model start) gen')
+            let ws = take numWords
+                     $ drop 1
+                     $ dropWhile (\s -> last s /= '.')
+                                 (evalState (runModel model start) gen')
             putStr $ lineFill 80 ws
 
+-- usage message if no arguments are given to the program
 usage :: IO ()
 usage = do
     progName <- getProgName
     hPutStrLn stderr $ "usage: " ++ progName ++ " numWords"
     exitWith $ ExitFailure 1
 
+-- Take in a string read from a serialized processed model and turn it into a
+-- FastModel by storing the processed model in an array
 mkFastModel :: String -> FastModel
 mkFastModel modelString =  listArray (1, length modelData) modelData where
     modelData = read <$> lines modelString :: ProcessedModel
 
+-- Take in a list of (weight, next index) pairs and choose one by weight,
+-- returning a RandState that contains the next index
 select :: [(Int, Int)] -> RandState Int
 select tuples = getNext tuples <$> (state . randomR $ (0, range-1)) where
     range = foldr ((+) . fst) 0 tuples
@@ -43,7 +51,9 @@ select tuples = getNext tuples <$> (state . randomR $ (0, range-1)) where
         | num <= (fst tuple) = snd tuple
         | otherwise          = getNext rest (num - (fst tuple))
 
-
+-- Run the FastModel using a specified start state.  The model is run by choosing
+-- an infinite number of words by choosing a random successor from the list of
+-- successors of the current state in the FastModel
 runModel :: FastModel -> Int -> RandState [String]
 runModel model start = iter start where
     iter ix = do
@@ -55,6 +65,7 @@ runModel model start = iter start where
                 ws <- iter nextIx
                 return (word:ws)
 
+-- Pretty-print a string using n-character lines (Taken from CMSC 162 Lecture 18)
 lineFill :: Int -> [String] -> String
 lineFill _ [] = "\n"
 lineFill n (x:xs) = iter x xs where
