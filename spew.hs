@@ -59,7 +59,11 @@ runModel model start = iter start where
     iter ix = do
         let (word, successors) = model ! ix
         case successors of
-            [] -> return [word]
+            [] -> do
+                gen <- get
+                let (nextIx, _) = randomR (bounds model) gen
+                ws <- iter nextIx
+                return (word:ws)
             _  -> do
                 nextIx <- select successors
                 ws <- iter nextIx
