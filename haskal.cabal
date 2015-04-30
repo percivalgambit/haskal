@@ -45,27 +45,3 @@ executable spew
 
   -- hs-source-dirs:
   default-language:    Haskell2010
-
-test-suite test-suck
-  type:                exitcode-stdio-1.0
-  main-is:             test-suck.hs
-  build-depends:
-                       base >=4.7 && <4.9,
-                       QuickCheck >=2.7,
-                       test-framework >=0.8,
-                       test-framework-quickcheck2 >=0.3
-
-  hs-source-dirs:      tests
-  default-language:    Haskell2010
-
-test-suite test-spew
-  type:                exitcode-stdio-1.0
-  main-is:             test-spew.hs
-  build-depends:
-                       base >=4.7 && <4.9,
-                       QuickCheck >=2.7,
-                       test-framework >=0.8,
-                       test-framework-quickcheck2 >=0.3
-
-  hs-source-dirs:      tests
-  default-language:    Haskell2010
